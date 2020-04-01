@@ -172,7 +172,19 @@ Status Sq_Create_Linklist_tail(Linklist *L，int n){        //L是头节点的�
 }   
 
 
+Status linklist_Dele(Linklist *L){                    //单链表内容的删除
+	
+	Linklist p,q;
+	p = (*L)->next;
+	while(p){                                         //当P的值不为空时一直清理内存
+		q = p->next;
+		free(p);
+		p = q;
+	}
+    (*L)->next = NULL;
 
+	return OK;
+}
 
 
 
