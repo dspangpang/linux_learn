@@ -194,7 +194,7 @@ typedef struct{
 
 StaticLinklist space;
 
-Statis StaticlinklistInit ( StaticLinklist space ){                                //静态链表的初始化
+Status StaticlinklistInit ( StaticLinklist space ){                                //静态链表的初始化
 	
 	int i;
 	for( i = 0; i < LIST_INIT_SIZE-1;i++){
@@ -205,14 +205,37 @@ Statis StaticlinklistInit ( StaticLinklist space ){                             
 	return OK;
 }
 
-Static Creatspace (StaticLinklist space){														//静态链表模拟malloc
+Status Creatspace (StaticLinklist space){														//静态链表模拟malloc
 	int i = space[0].cur;
+	if(space[0].cur > LIST_INIT_SIZE-2)
+		return ERROR;
 	if(space[0].cur)
 		space[0].cur = space[i].cur;
 	return i;
 }
 
-Static Freespace(StaticLinklist space,int n){								//静态链表模拟 free
+Status Static_Linklist_Insert(StaticLinklist space,int i,ElemType e){                                        //静态链表插入数据
+	int n,j,k;
+	k = LIST_INIT_SIZE-1;
+	if(i<1 || i>space[0].cur)
+		return ERROR;
+	j = Creatspace(space);
+	if(j){
+		space[j].data = e;
+		for(n = 1;n<= i-1;n++)          //从最后一个数据往前走，一直到第i-1个数据，并不一定按数组顺序走，利用游标找到第i-1个数据
+			k =  space[k].cur;
+		space[j].cur = space[k].cur;
+		space[k].cur = j;
+		return OK;
+	}
+	return ERROR;
+	
+}
+
+
+
+
+Statuc Freespace(StaticLinklist space,int n){								//静态链表模拟 free
 	int i;
 
     space[n-1].data = space[space[n-1].cur].data;
