@@ -131,7 +131,7 @@ Status Sq_InsertElem_link(Linklist* L,int i,ElemType e){   //从链式线性表�
 
 //头插法***************始终让新的节点在第一个位置*********************************************/
 
-Status Sq_Create_Linklist_head(Linklist *L，int n){        //L是头节点的地址
+Status Sq_Create_Linklist_head(Linklist *L，int n){        //L是头节点的地址 即头指针;
 	Linklist p;
 	int i;
 	srand(time(0));      //初始化随机数种子
@@ -158,7 +158,7 @@ Status Sq_Create_Linklist_tail(Linklist *L，int n){        //L是头节点的�
 	srand(time(0));      //初始化随机数种子
 
 	*L = (Linklist)malloc(sizeof(Node));
-	r = *L;
+	r = *L;                                          //r 只是一个标志地址 指向最后的 节点;
 
 	for(i = 0; i<n ;i++ ){
 		
@@ -167,6 +167,7 @@ Status Sq_Create_Linklist_tail(Linklist *L，int n){        //L是头节点的�
 		r->next = p;
 		r = p;
 	}
+	r->next = NULL;
 
 
 }   
@@ -185,67 +186,6 @@ Status linklist_Dele(Linklist *L){                    //单链表内容的删除
 
 	return OK;
 }
-
-/*****************************************静态链表*********************************************/
-typedef struct{
-	Elemtype data;
-	int cur;
-}StaticLinklist[LIST_INIT_SIZE],Component;
-
-StaticLinklist space;
-
-Status StaticlinklistInit ( StaticLinklist space ){                                //静态链表的初始化
-	
-	int i;
-	for( i = 0; i < LIST_INIT_SIZE-1;i++){
-		space[i].cur = i+1;
-
-	}
-	space[LIST_INIT_SIZE-1].cur = 0;
-	return OK;
-}
-
-Status Creatspace (StaticLinklist space){														//静态链表模拟malloc
-	int i = space[0].cur;
-	if(space[0].cur > LIST_INIT_SIZE-2)
-		return ERROR;
-	if(space[0].cur)
-		space[0].cur = space[i].cur;
-	return i;
-}
-
-Status Static_Linklist_Insert(StaticLinklist space,int i,ElemType e){                                        //静态链表插入数据
-	int n,j,k;
-	k = LIST_INIT_SIZE-1;
-	if(i<1 || i>space[0].cur)
-		return ERROR;
-	j = Creatspace(space);
-	if(j){
-		space[j].data = e;
-		for(n = 1;n<= i-1;n++)          //从最后一个数据往前走，一直到第i-1个数据，并不一定按数组顺序走，利用游标找到第i-1个数据
-			k =  space[k].cur;
-		space[j].cur = space[k].cur;
-		space[k].cur = j;
-		return OK;
-	}
-	return ERROR;
-	
-}
-
-
-
-
-Statuc Freespace(StaticLinklist space,int n){								//静态链表模拟 free
-	int i;
-
-    space[n-1].data = space[space[n-1].cur].data;
-	space[n-1].cur = space[space[n-1].cur].cur;
-	
-}
-
-
-
-
 
 
 
