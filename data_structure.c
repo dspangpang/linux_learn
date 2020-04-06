@@ -187,9 +187,53 @@ Status linklist_Dele(Linklist *L){                    //单链表内容的删除
 	return OK;
 }
 
+/***************************************静态链表**********************************************************************/
+
+typedef struct{
+	Elemtype data;
+	int cur;
+}StaticLinklist[LIST_INIT_SIZE],Component;
+
+StaticLinklist space;
+
+Status StaticlinklistInit ( StaticLinklist space ){																		//静态链表的初始化
+	int i;
+	for( i = 0; i < LIST_INIT_SIZE-1;i++){
+		space[i].cur = i+1;
+	}
+	space[LIST_INIT_SIZE-1].cur = 0;
+	return OK;
+							
+}
 
 
+Status Creatspace (StaticLinklist space){								//静态链表模拟malloc
+	int i = space[0].cur;
+	if(space[0].cur > LIST_INIT_SIZE-2)
+		return ERROR;
+	if(space[0].cur)
+		space[0].cur = space[i].cur;
+	return i;
 
+
+}
+
+Status Static_Linklist_Insert(StaticLinklist space,int i,ElemType e){                              //静态链表的插入操作
+	int i,j,k;
+	k = LIST_INIT_SIZE-1;
+	if(i<1 || i>space[0].cur)
+		return ERROR;
+	j = Creatspace(space);
+	if(j){
+		space[j].data = e;
+		for(n = 1;n<= i-1;n++)          //从最后一个数据往前走，一直到第i-1个数据，并不一定按数组顺序走，利用游标找到第i-1个数据
+			k =  space[k].cur;
+		space[j].cur = space[k].cur;
+		space[k].cur = j;
+		return OK;
+	}
+	return ERROR;
+}
 
 
 
