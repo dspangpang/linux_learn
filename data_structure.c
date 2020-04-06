@@ -188,13 +188,25 @@ Status linklist_Dele(Linklist *L){                    //单链表内容的删除
 }
 
 /***************************************静态链表**********************************************************************/
-
+////*********************************************************************************************************/
 typedef struct{
 	Elemtype data;
 	int cur;
 }StaticLinklist[LIST_INIT_SIZE],Component;
 
 StaticLinklist space;
+
+
+int listlength_get(StaticLinklist space){          //获取静态链表长度
+	int i,j;
+	j = 0;
+	i = space[LIST_INIT_SIZE-1].cur;
+	while(i){
+		j++
+		i = space[i].cur;
+	}
+	return j;
+}
 
 Status StaticlinklistInit ( StaticLinklist space ){																		//静态链表的初始化
 	int i;
@@ -219,9 +231,9 @@ Status Creatspace (StaticLinklist space){								//静态链表模拟malloc
 }
 
 Status Static_Linklist_Insert(StaticLinklist space,int i,ElemType e){                              //静态链表的插入操作
-	int i,j,k;
+	int n,j,k;
 	k = LIST_INIT_SIZE-1;
-	if(i<1 || i>space[0].cur)
+	if(i<1 || i>listlength_get(space)+1)
 		return ERROR;
 	j = Creatspace(space);
 	if(j){
@@ -233,6 +245,50 @@ Status Static_Linklist_Insert(StaticLinklist space,int i,ElemType e){           
 		return OK;
 	}
 	return ERROR;
+}
+
+
+
+Status Freespace (StaticLinklist space,int k){          //把下标为K的空闲回收到备用链表
+	if(i<1 || i>space[0].cur-1)
+		return ERROR;
+	space[k].cur = space[0].cur;
+	space[0].cur = k;
+	return OK;
+}
+
+
+Status Static_Linklist_Dele(StaticLinklist space,int i,ElemType e){
+	int j,k;
+	if(i<1 || i>listlength_get(space))
+		return ERROR;
+	k = LIST_INIT_SIZE-1;
+	for(j = 1;j<= i-1;n++)
+		k =  space[k].cur;
+	j = space[k].cur;
+	space[k].cur = space[j].cur;
+	Freespace(space,j);
+	return OK;
+
+}
+
+////////****************************************************单链表算法**********************************************************************/
+
+Status GetMidNode(Linklist L，ElemType *e){              ///快慢指针的原理   一个指针二倍速前进，另一个指针就是中间位置！！！！！！！
+	Linklist search,mid;
+	mid = search = L;
+	while(search->next != NULL){
+		if(search->next->next != NULL){
+			search = search->next->next;
+			mid = mid->next;
+		}
+		else{
+			search = search->next;
+		}
+
+	}
+	*e = mid->data;
+	return Ok;
 }
 
 
