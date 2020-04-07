@@ -292,5 +292,131 @@ Status GetMidNode(Linklist L，ElemType *e){              ///快慢指针的原�
 }
 
 
+////////***********************************************循环链表*************************************************************************/
+
+typedef struct CirLinklist{
+	
+	ElemType data;
+	struct CirLinklist *next;	
+
+};
+typedef struct CirLinklist * CirLinklist ;
+CirLinklist node;
+
+Status cir_linklist_Init(CirLinklist * pNode){                  //传参为头节点的头指针；   头节点是一个结构体指针
+	int item;
+	CirLinklist temp;
+	CirLinklist target;
+	printf("请输入节点的值\n");
+
+	while(1){
+		scanf("%d",&item);
+		fflush(stdin)              //清空输入缓存
+
+		if(item = 0){
+			return 0;
+		}
+		if(*pNode == NULL){                 //头节点为空 ，即头节点的变量没有初始化
+			(*pNode) ==(CirLinklist)malloc(sizeof(struct CirLinklist));
+			if(!(*pNode)){
+				exit(0);
+			}
+			(*pNode)->data = item;
+			(*pNode)->next = *pNode;                     //循环链表中只有一个节点 构成循环链表
+		}
+		else{
+			for(target = (*pNode);target->next!=(*pNode);target = target->next);         //找到指向第一个节点的节点  即尾为节点
+			temp = (CirLinklist)malloc(sizeof(struct CirLinklist));
+			if(!temp){
+				exit(0);
+			}
+			temp->data = item;
+			temp->next = (*pNode);
+			target->next = temp;                                         //使新建的节点的变成最后一个节点
+		}
+
+	}
+}
+//插入节点
+Status cir_linklist_Insert(CirLinklist * pNode,int i;){                        //参数为头节点的头指针和要插入的位置
+	CirLinklist temp;
+	CirLinklist target;
+	CirLinklist p;
+	int item;
+	int j = 1;
+	printf("要插入参数的值\n");
+	scanf("%d",&item);
+	if(i == 1){																//如果要把值插入到第一个节点
+		temp = (CirLinklist)malloc(sizeof(struct CirLinklist));
+		if(!temp){
+		    exit(0);
+		}
+		
+		temp->data =item;
+		
+		for(target = (*pNode);target->next!=(*pNode);target = target->next);              //找到指向第一个节点的节点  即尾为节点
+		
+		temp->next = (*pNode);
+		target->next = temp;                                                              //此时temp为头节点；
+		*pNode = temp;                                                           //更换该链表的头节点地址；
+		
+	}
+	else{
+		target = *pNode;
+		for(;j<(i-1);j++){       //比如 i = 3;j = 1 从头节点 指向第三个节点    只要 令target 为第二个节点，第三个节点为target->next
+			target = target->next;
+		}                     
+		temp = (CirLinklist)malloc(sizeof(struct CirLinklist));
+		if(!temp){
+		    exit(0);
+		}
+
+		temp->data = item;
+		p = target->next;
+		target->next = temp;
+		temp->next = p;
+	}
+}
+
+
+
+//删除指定节点
+Status cir_linklist_Insert(CirLinklist * pNode,int i;){  
+	CirLinklist temp;
+	CirLinklist target;
+	int j = 1;
+
+	if(i == 1){                      //如果要删除第一个节点
+		for(target = (*pNode);target->next!=(*pNode);target = target->next);              //找到指向第一个节点的节点  即尾为节点
+		temp = (*pNode);
+		(*pNode) = (*pNode)->next;
+		target->next = (*pNode);
+		free(temp);
+	}
+	else{
+		target = (*pNode);
+		for(;j<(i-1);j++){			//比如 i = 3;j = 1 从头节点 指向第三个节点    只要 令target 为第二个节点，第三个节点为target->next
+			target = target->next;
+		}
+		temp = target->next;
+		target->next = temp->next;
+		free(temp);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
