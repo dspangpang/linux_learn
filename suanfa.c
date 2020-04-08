@@ -36,6 +36,18 @@ int lengthOfLongestSubstring(char * s){
 		return maxlen;
 }
 
+////*********************************************中心扩散法**************************************************************************/
+
+//中心扩散法的思路是：遍历每一个索引，以这个索引为中心，利用“回文串”中心对称的特点，往两边扩散，看最多能扩散多远。
+
+//题目  给定一个字符串 s，找到 s 中最长的回文子串。你可以假设 s 的最大长度为 1000*//// 
+
+
+
+/*枚举“中心位置”时间复杂度为 O(N)，从“中心位置”扩散得到“回文子串”的时间复杂度为 O(N)，因此时间复杂度可以降到O(N2）
+ 在这里要注意一个细节：回文串在长度为奇数和偶数的时候，“回文中心”的形式是不一样的。
+ 奇数回文串的“中心”是一个具体的字符，例如：回文串 “aba” 的中心是字符 “a”；
+ 偶数回文串的“中心”是位于中间的两个字符的“空隙”，例如：回文串串 “abba” 的中心是两个 “b” 中间的那个“空隙”。*/
 
 
 
@@ -43,6 +55,32 @@ int lengthOfLongestSubstring(char * s){
 
 
 
+char * longestPalindrome(char * s){
+    if(strlen(s)==0||strlen(s)==1)
+		return s;
+	int i,start,left,right,count,len;
+	start = len =0;
+	for(i=0;s[i]!='\0';i+=count){
+		count = 1;
+		left=i-1;
+		right = i+1;
+		while(s[right]!='\0'&&s[i]==s[right]){ //处理重复字符串
+			right++;
+			count++;
+		}
+		while(left>=0 && s[right]!='\0' && s[left] == s[right]){
+			left--;
+			right++;
+	    }
+        if(right-left-1>len){
+		start = left+1;											
+		len = right-left-1;
+		}
+						
+	}	
+	s[start + len] = '\0';      // 原地修改返回
+	return s + start;
+}
 
 
 
