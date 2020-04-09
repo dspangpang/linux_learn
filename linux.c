@@ -18,6 +18,9 @@ if(pid_err==0){
 
 
 /******************************无名管道的用法************************************************************************/
+
+
+
 /*单独构成一种独立的文件系统：管道对于管道两端的进程而言，就是一个文件，但它不是普通的文件，它不属于某种文件系统，而是自立门户，
 单独构成一种文件系统，并且只存在与内存中。*/
 
@@ -95,9 +98,67 @@ int mkfifo(const char *pathname, mode_t mode);   //第一个参数为 创建管�
 
 
 
+/******************************************信号通信***********************************************************************/
+#include <signal.h>
+
+/*  1）信号是在软件层次上对中断机制的一种模拟，是一种异步通信方式
+
+　　2）信号可以直接进行用户空间进程和内核进程之间的交互，内核进程也可以利用它来通知用户空间进程发生了哪些系统事件。
+
+　　3）如果该进程当前并未处于执行态，则该信号就由内核保存起来，直到该进程恢复执行再传递给它；如果一个信号被进程设置为阻塞，
+		则该信号的传递被延迟，直到其阻塞被 取消时才被传递给进程。
 
 
 
+ / *1）忽略信号：对信号不做任何处理，但是有两个信号不能忽略：即SIGKILL及SIGSTOP。
+
+　　2）捕捉信号：定义信号处理函数，当信号发生时，执行相应的处理函数。
+
+　　3）执行缺省操作：Linux对每种信号都规定了默认操作                  */
+
+
+
+
+//信号发送函数 
+
+int kill(pid_t pid, int sig);     //返回值：成功 0；失败 -1
+
+
+// 向自己发送一个信号
+int raise(int sig);			                      //sig：要发送的信号
+
+
+
+//在自己进程中设置一个定时器
+unsigned int alarm(unsigned int seconds)；             //参数：seconds：定时时间，单位为秒
+														//返回值：如果调用此alarm()前，进程中已经设置了闹钟时间
+														//，则返回上一个闹钟时间的剩余时间，否则返回0。
+								//注意：一个进程只能有一个闹钟时间。如果在调用alarm时已设置过闹钟时间，则之前的闹钟时间被新值所代替
+
+
+//功能：用于将调用进程挂起直到收到信号为止。
+int pause(void);
+
+
+
+//！！！！！signal函数
+
+typedef void (*sighandler_t)(int);    //定义 一种 void..(int)型的函数指针  typedef 为 sighandler_t；
+
+sighandler_t signal(int signum, sighandler_t handler);      //signal 函数的定义      第一个参数是 要改变的信号     第二个是  要执行的函数
+															//第二个参数  可是是 SIG_ING  忽略这个函数
+															//                   SIG_DFL  按默认 方式执行
+void signal_handler_fun(int signum) {
+                                                               //声明一个函数  用于signal 函数的调用 ，参数是   信号的num
+
+}
+
+//signal    成功反会 该信号上一次执行的函数的指针      失败返回错误码；
+
+//The signals SIGKILL and SIGSTOP cannot be caught or ignored.
+
+
+//每个signal   每个信号只会 记住 最后一次的 修改  
 
 /*******************************************线程**************************************************************************/
 
@@ -139,8 +200,37 @@ pthread_mutex_unlock(&mutex)
 
 
 
+////****************************************读写锁**************************************************************************/
 
+
+
+/*读锁又称为（共享锁）如果进程1对一个数据上了读锁，进程1只能读，其他进程也只能对这个数据上读锁；写锁又叫排他锁，
+如果进程1给数据上写锁，则进程1可以对该数据进行读写，而其他的进程不能对该数据操作。*/
+
+//成功返回 0  失败返回错误码
+
+
+
+//读写锁的初始化函数
+int pthread_rwlock_init(pthread_rwlock_t *restrict rwlock,const pthread_rwlockattr_t *restrict attr);  //第一个参数为声明的读写锁   
+																								//第二个是读写锁的属性						
+//使用完的读写锁需要销毁
+int pthread_rwlock_destroy(pthread_rwlock_t *rwlock);
   
+
+//解锁函数
+int pthread_rwlock_unlock(pthread_rwlock_t *rwlock);                 
+
+
+//上读锁
+int pthread_rwlock_rdlock(pthread_rwlock_t *rwlock);         // 上锁失败会堵塞
+
+int pthread_rwlock_tryrdlock(pthread_rwlock_t *rwlock);       //失败不会堵塞
+
+//上 写锁
+int pthread_rwlock_wrlock(pthread_rwlock_t *rwlock);          // 上锁失败会堵塞
+
+int pthread_rwlock_trywrlock(pthread_rwlock_t *rwlock);         //失败不会堵塞
 
 
 
