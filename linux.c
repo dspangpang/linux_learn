@@ -160,6 +160,77 @@ void signal_handler_fun(int signum) {
 
 //每个signal   每个信号只会 记住 最后一次的 修改  
 
+
+
+
+
+
+/*****************************************共享内存 ***************************************************************************/
+//！！！！！！！！！！！！！！！！共享内存的数据可多次读取
+//1.查看系统中的共享存储段
+   ipcs -m
+
+//2.删除系统中的共享存储段
+	ipcrm -m [shmid];
+
+//3.共享内存的创建  
+//（1）ftok函数的使用 
+key_t ftok(const char *pathname, int proj_id)；
+  //第一个参数为 一个存在可读写的文件路径    第二个参数 计划ID 可以随机填写
+  
+//	成功：返回key_t值（即IPC 键值）
+//	失败返回-1
+
+
+int shmget(key_t key, size_t size, int shmflg);    //共享内存的创建函数
+//第二个参数  是 要创建的共享内寸的大小  
+//第三个参数shmflg是一组标志，创建一个新的共享内存，将shmflg 设置了IPC_CREAT标志后，共享内存存在就打开。
+//而IPC_CREAT | IPC_EXCL则可以创建一个新的，唯一的共享内存，如果共享内存已存在，返回一个错误。一般我们会还或上一个文件权限
+//|上创建的权限
+
+//返回值 ；成功返回创建共享内存的ID号 失败返回-1
+
+//将共享内存映射到用户空间中
+void *shmat(int shmid, const void *shmaddr, int shmflg);
+//第一个参数为 是创建的共享内存的ID号  
+//第二个参数是共享内存要映射的地址 填NULL 系统会自动分配
+//第二个函数 是标志位 SHM_RDONLY 是设置该共享内存只读  默认是 0 可读写
+
+//返回值是 映射的地址
+
+//将共享内存的映射空间删除
+
+int shmdt(const void *shmaddr);
+//成功返回0 失败返回-1
+
+//删除创建的共享内存对象
+
+int shmctl(int shmid, int cmd, struct shmid_ds *buf);
+//第一个参数位 共享内存的标识符
+//第二个参数是 控制命令 
+//IPC_STAT  获取对象属性 
+//IPC_SET   设置对象属性
+//IPC_RMID   删除创建的共享内存
+
+//第三个参数是 使用与对象属性有关的结构体 并没有涉及
+
+
+
+
+//操作过程 
+
+  key = ftok("a.c","b");                            //每次创建时 要判断是否失败！！！！！！！
+  shmid = shmget( key, size,shmflg);
+  p = (char*)shmat(shmid, NULL,shmflg);
+  fgets(p,size,stdin);   //每写一次相当于对原来共享内存内容的覆盖
+  printf("%s",p);
+  shmdt(p);
+  
+  shmctl(shmid,IPC_RMID,NULL);//删除创建的共享内存
+   
+
+
+
 /*******************************************线程**************************************************************************/
 
 
@@ -231,6 +302,71 @@ int pthread_rwlock_tryrdlock(pthread_rwlock_t *rwlock);       //失败不会堵�
 int pthread_rwlock_wrlock(pthread_rwlock_t *rwlock);          // 上锁失败会堵塞
 
 int pthread_rwlock_trywrlock(pthread_rwlock_t *rwlock);         //失败不会堵塞
+
+
+
+/*****************************************条件变量*********************************************************************************/
+
+//避免因线程逻辑上的无法执行而导致CPU空转
+
+
+pthread_cond_t     //条件变量 
+ pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+//条件变量的初始化
+int pthread_cond_init(pthread_cond_t *cond, pthread_condattr_t *cond_attr);     //同上初始化函数
+
+//条件变量使用完后销毁
+
+int pthread_cond_destroy(pthread_cond_t *cond);
+
+
+//   条件变量的使用要配合互斥量   成对存在
+
+int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex); 
+//当函数没有收到改条件变量时，会将该互斥量解锁  然后将该线程阻塞
+//等到 收到该条件变量的时候，互斥量继续加锁  该线程继续执行
+
+int pthread_cond_timedwait(pthread_cond_t *cond,  pthread_mutex_t  *mutex, const struct timespec *abstime);
+
+//相比较第一个函数这个函数多了一个时间  当时间到了 条件还没有返回就 直接返回   这个 等以后用到了再做研究；
+
+
+
+
+//当条件满足只会  唤醒正在阻塞的线程
+
+int pthread_cond_signal(pthread_cond_t *cond);
+
+int pthread_cond_broadcast(pthread_cond_t *cond);   //第二个函数 可以唤醒所有等待条件的线程  而第一个函数不一定
+
+//条件变量自己创建
+
+
+
+
+//条件变量使用逻辑
+
+    pthread_mutex_lock(&mutex);      //互斥量上锁
+	
+	if(/*判断是否具备该线程执行的逻辑条件 */){
+		
+		pthread_cond_wait(&cond,&mutex);       //如果不满足  解锁该互斥量  并阻塞该线程  不占用CPU
+	}
+	
+	pthread_cond_signal(&cond);    //当状态改变时  即满足某个线程的逻辑执行条件时  发送条件变量到线程 
+	
+	pthread_mutex_unlock(&mutex);    //互斥量解锁
+	
+	 
+	
+	
+
+
+
+
+
+
+
 
 
 
