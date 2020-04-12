@@ -227,6 +227,113 @@ int shmctl(int shmid, int cmd, struct shmid_ds *buf);
   shmdt(p);
   
   shmctl(shmid,IPC_RMID,NULL);//删除创建的共享内存
+
+
+
+
+
+/***************************************************消息队列****************************************************************************/
+
+//需要包含的头文件 
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+
+
+//消息队列的创建函数 
+
+int msgget(key_t key, int msgflag);
+
+//参数：
+//key：某个消息队列的名字，用ftok()产生
+//msgflag：有两个选项IPC_CREAT和IPC_EXCL，单独使用IPC_CREAT，如果消息队列不存在则创建之，如果存在则打开返回；单独使用IPC_EXCL是没有意义的；
+//两个同时使用，如果消息队列不存在则创建之，如果存在则出错返回。
+//返回值：成功返回一个非负整数，即消息队列的标识码，失败返回-1
+//////函数使用之后要判断是否成功！！！！！！！
+
+
+
+
+
+//消息队列的控制函数
+
+
+int msgctl(int msqid, int cmd, struct msqid_ds *buf);
+
+//msqid：由msgget函数返回的消息队列标识码
+//cmd：有三个可选的值，在此我们使用IPC_RMID
+
+//IPC_STAT 把msqid_ds结构中的数据设置为消息队列的当前关联值
+//IPC_SET 在进程有足够权限的前提下，把消息队列的当前关联值设置为msqid_ds数据结构中给出的值
+//IPC_RMID 删除消息队列
+//返回值：
+//成功返回0，失败返回-1
+
+
+
+//把一条消息添加到消息队列中
+
+
+int msgsnd(int msqid, const void *msgp, size_t msgsz, int msgflg);
+
+/*
+参数：
+msgid：由msgget函数返回的消息队列标识码
+msgp：指针指向准备发送的消息
+msgze：msgp指向的消息的长度（不包括消息类型的long int长整型）
+msgflg：默认为0
+返回值：成功返回0，失败返回-1
+
+消息结构一方面必须小于系统规定的上限，另一方面必须以一个long int长整型开始，接受者以此来确定消息的类型
+*/
+
+struct msgbuf{
+	long mtye;
+	char mtext[1];
+};
+
+
+
+
+//是从一个消息队列接受消息
+
+ssize_t msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg);
+
+/*
+参数：与msgsnd相同
+返回值：成功返回实际放到接收缓冲区里去的字符个数，失败返回-1
+*/
+
+
+
+
+//两个系统命令
+
+ipcs://显示IPC资源
+ipcrm://手动删除IPC资源
+
+
+
+
+
+//使用逻辑  
+
+      key = ftok("./a.c","b")           //创建key
+	  msgid = msgget( key, msgflag);    //创建消息队列
+	  struct mybuf buf;
+	  msgsnd(msqid, (void *)&buf, msgsz,msgflg);
+	  msgrcv(msqid,(void *)&buf,msgsz, buf.typ, msgflg);                 //有返回值的函数 都需要接受返回值 并判断是否创建失败
+	  msgctl(msqid,IPC_RMID, NULL);       //第三个参数数消息列队的属性常用NULL
+	  
+
+
+
+
+
+
+
+
+
    
 
 

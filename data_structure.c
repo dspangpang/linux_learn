@@ -432,6 +432,51 @@ Status cir_linklist_Insert(CirLinklist * pNode,int i;){
 
 
 
+////////////////////////////////////////*********双向链表************************//////////////////////////////////////////////////////////
+
+
+typedef struct DualNode{
+	Elemtype data;
+	struct DualNode *piror;          //前驱节点   指向 前一个节点
+	struct DualNode *next;			 //后继节点	  指向 后一个节点
+}DualNode;
+
+typedef struct DualNode* DualNodelist;
+
+
+//增，删，改，插   操作注意多了一个指针     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
