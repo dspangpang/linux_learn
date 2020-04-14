@@ -371,7 +371,20 @@ pthread_t  = tid;
  err = pthread_create(*tid,NULL,thread_fun, void *arg);
  //如果出错 就返回！！！！！！！！！
  
- 
+
+//当主线程调用  return 的时候 进程就结束了
+//可以使用函数
+void pthread_exit(void *retval);   //等所有线程执行完了再结束进程    此参数是一个回填参数 调用函数时自动装填，只需要设置一个同类型的变量
+
+//使用方式 就是
+	void *ret;
+	pthread_exit(ret);
+
+
+//线程的回收
+  
+  ！！自己创建的资源要自己进行回收  例如 malloc   或者 互斥量 条件变量  再任何线程都可以回收 
+
 
 
 
@@ -393,7 +406,7 @@ pthread_mutex_t mutex;   //可设置为一全局变量
 pthread_mutex_init (&mutex,NULL)  //前一个变量为 声明的互斥量的地址   ，后一个量为 互斥量属性 ，不设置可设为NULL
 
 //加锁
-pthread_mutex_lock(&mutex)
+pthread_mutex_lock(&mutex)          //连续两次上锁会造成死锁 ，线程挂起
 
 
 //中间进行数据读取操作
@@ -525,6 +538,10 @@ int pthread_attr_init(pthread_attr_t *attr);
 int pthread_attr_destroy(pthread_attr_t *attr);
 
 
+
+
+
+
 //线程的分离属性
 int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate);    //设置分离状态属性
 
@@ -535,10 +552,126 @@ int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate);	/
 
 //操作方式
 
-	1.初始化变量    pthread_attr_t  attr;	int detachstate          
-	2.调用初始化函数   pthread_attr_init(&attr);                  //与销毁配套出现
+	1.初始化变量        pthread_attr_t  attr;	int detachstate          
+	2.调用初始化函数    pthread_attr_init(&attr);                  //与销毁配套出现
 	3.设置属性 			pthread_attr_setdetachstate(&attr, detachstate);
 	4.创建线程
 	
+
+
+
+//线程的栈的大小和地址
+
+ 进程的虚拟空间是一定的，通常一个进程只有一个线程栈，当线程多了之后，线程栈的数量有可能超过进程的虚拟空间，所以要改变创建线程的线程栈
+
+
+//===============================修改线程栈属性
+int pthread_attr_setstack(pthread_attr_t *attr,void *stackaddr, size_t stacksize);
+
+
+//获得线程栈属性
+int pthread_attr_getstack(const pthread_attr_t *attr, void **stackaddr, size_t *stacksize);
+
+
+//修改线程栈的大小                不能小于   PTHREAD_STACK_MIN   
+int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
+
+//获取线程栈的大小     
+int pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stacksize);
+
+
+//===========栈尾警戒区，防止空间溢出，在栈尾拓展一些空间
+
+//默认是PAGESIZE 个字节   设置0将不会设置缓冲区
+
+int pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize);
+
+
+int pthread_attr_getguardsize(const pthread_attr_t *attr, size_t *guardsize);
+
+//使用时需要判断是否支持线程栈属性的修改
+
+#ifdef _POSIX_THREAD_ATTR_STACKSIZE
+
+#endif
+
+
+//=====================================线程的同步属性
+
+
+//互斥量的属性
+       
+int pthread_mutexattr_init(pthread_mutexattr_t *attr);          //互斥量属性的初始化
+
+int pthread_mutexattr_destroy(pthread_mutexattr_t *attr);        //互斥量属性的销毁
+
+
+//互斥量的共享属性     //读写锁  //条件变量 //同理 都有进程共享属性
+
+int pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr,int *pshared);     //获取互斥量的共享属性
+
+
+
+int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr,int pshared);             //设置互斥量的共享属性
+
+
+PTHREAD_PROCESS_PRIVATE   //仅在一个进程内多个线程使用
+
+PTHREAD_PROCESS_SHARED    // 多个进程可共享互斥量
+
+//设置时判断 系统支持 
+
+#ifdef _POSIX_PTHREAD_PROCESS_SHARED
+#endif
+
+
+
+
+//互斥量的类型属性
+
+
+int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int kind);
+
+int pthread_mutexattr_gettype(const pthread_mutexattr_t *attr, int *kind);
+
+/* 
+                             没有解锁再次加锁            不占用时解锁          解锁后解锁
+PHTREAD_MUTEX_NORMAL      |       死锁			  |        未定义          |     未定义
+PTHREAD_MUTEX_ERRORCHECK  |		返回错误		  |       返回错误         |	返回错误
+PTHREAD_MUTEX_RECURSIVE	  |      允许（递归）     |       返回错误         |	返回错误
+PTHREAD_MUTEX_DEFAULT     |		 未定义           |        未定义          |     未定义
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
