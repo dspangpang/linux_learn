@@ -455,16 +455,75 @@ typedef struct DualNode* DualNodelist;
 
 
 
+/****************************************************栈************************************************************************************/
+
+
+	1.栈其实是特殊的线性表
+	
+	2.要符合先入后出的规则
+	
+	3.只能在表尾进行操作。    表尾称为栈顶top    表头称为栈底bottom
 
 
 
+//创建一个顺序栈
+
+typedef struct{
+	
+	ElemType *base;
+	ElemType *top;
+	int stackSize;
+}sqStack;
+
+#define STATCK_INIT_SIZE 100;
+
+Status Stack_init(sqStack* s){
+	s->base = (ElemType *)malloc(sizeof(ElemType)*STATCK_INIT_SIZE);
+	if(!s->base){
+		exit(0;)
+	}
+	s->top = s-base;               //最开始  栈顶就是栈底
+	s->stackSize = STATCK_INIT_SIZE;
+
+	return OK;
+
+} 
 
 
+//栈的插入操作push
+
+#define STATCK_ADD_SIZE 10;          //当栈满动态追加栈的空间的大小
 
 
+void *realloc(void *ptr, size_t size);      //重新生成空间   第一个参数是 要获取空间的地址的首位        第二个参数是要重新生成空间的大小
+
+Status Stack_Push(sqStack* s , ElemType e){
+	if(s->top - s->base >= s->stackSize){      //两个指针相减是  两个地址之间 相差的指针类型的个数
+		s->base = (ElemType *)realloc(s->base,sizeof(ElemType)*(s->stackSize + STATCK_ADD_SIZE));
+		if(!s->base ){
+			exit(0);
+		}
+		s->top = s->base + s->stackSize;         //设置栈顶
+		s->stackSize = s->stackSize + STATCK_ADD_SIZE ;    //设置栈的最大容量
+	}
+	*(s->top) = e;
+	s->top++;
+	return OK;
+}
+
+//栈的删除操作  pop
 
 
+Status Stack_Pop(sqStack* s , ElemType *e){       //出栈并返回 出栈的数据
+	if(s->top == s->base){             //栈只剩最后一个元素
+		*e = *(s->top);
+		*(s->top) = 0;
+		return OK;
+	}
 
+	*e = (*(s->top)--);
+	return OK;
+}
 
 
 
