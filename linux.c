@@ -388,6 +388,65 @@ void pthread_exit(void *retval);   //等所有线程执行完了再结束进程 
 
 
 
+
+//线程的连接或者说是线程资源的回收   
+
+ int pthread_join(pthread_t thread, void **retval);
+ 
+ pthread_join使一个线程等待另一个线程结束。
+
+ 代码中如果没有pthread_join主线程会很快结束从而使整个进程结束，从而使创建的线程没有机会开始执行就结束了。加入pthread_join后，主线程会一直等待
+ 直到等待的线程结束自己才结束，使创建的线程有机会执行。      //可以达到阻塞主线程的效果
+
+
+ 第一个参数是线程的id ， 第二个参数是线程结束后的返回时，不需要时可以用NULL 填充
+ 线程被取消时 回返回 PTHREAD_CANCELED
+
+
+
+//线程的取消   
+
+线程可以通过自身执行结束来结束，也可以通过调用pthread_exit()来结束线程的执行。另外，线程甲可以被线程乙被动结束。这个通过调用pthread_cancel()
+来达到目的。
+
+int pthread_cancel(pthread_t thread);
+函数调用成功返回0。
+
+当然，线程也不是被动的被别人结束。它可以通过设置自身的属性来决定如何结束
+
+线程的被动结束分为两种，一种是异步终结，另外一种是同步终结。
+
+异步终结就是当其他线程调用pthread_cancel的时候，线程就立刻被结束。
+
+而同步终结则不会立刻终结，它会继续运行，直到到达下一个结束点cancellation point当一个线程被按照默认的创建方式创建，那么它的属性是同步终结。
+
+
+void pthread_testcancel(void);  //在函数中建立取消点
+
+
+
+
+
+//更改线程的取消状态      可被取消    不可被取消
+
+
+int pthread_setcancelstate(int state, int *oldstate);
+  第二个参数是，上一个状态
+ 
+ PTHREAD_CANCEL_ENABLE     线程可被取消  
+PTHREAD_CANCEL_DISABLE     线程不可被取消
+
+//更改线程的取消类型   延时取消  异步取消
+int pthread_setcanceltype(int type, int *oldtype);
+
+第二个参数是上一个类型
+
+
+PTHREAD_CANCEL_DEFERRED   延时取消
+PTHREAD_CANCEL_ASYNCHRONOUS  异步取消                     //异步取消 即立即被取消
+
+
+
 /***********************互斥量*****************************************************************************************/
 
 //加锁
@@ -550,6 +609,11 @@ int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate);	/
 //PTHREAD_CREATE_DETACHED     //分离状态
 //PTHREAD_CREATE_JOINABLE      /*不可分离状态 */   int detachstate的值；
 
+若线程设置为可销毁 
+则  使用 int pthread_detach(pthread_t thread); 使线程分离  使线程分离进程 独自运行
+
+成功返回 0  失败返回错误码
+
 //操作方式
 
 	1.初始化变量        pthread_attr_t  attr;	int detachstate          
@@ -646,6 +710,70 @@ PTHREAD_MUTEX_DEFAULT     |		 未定义           |        未定义          | 
 
 
 
+/******************线程的私有数据*/
+
+
+//私有数据在每个线程中虽然叫同样的名字 但是却互不影响  
+
+//在使用是由数据之前我们需要创建一个 键 来获得对私有数据的访问权限 
+
+pthread_key_t         //声明这个变量
+
+int pthread_key_create(pthread_key_t *key, void (*destr_function) (void *));      //键的创建函数
+
+功能：
+
+创建一个类型为 pthread_key_t 类型的私有数据变量( key )。
+
+參数：
+
+key：在分配( malloc )线程私有数据之前，须要创建和线程私有数据相关联的键( key )，这个键的功能是获得对线程私有数据的訪问权。
+
+destructor：清理函数名字( 如：fun )。当线程退出时，假设线程私有数据地址不是非 NULL，此函数会自己主动被调用。该函数指针能够设成 NULL ，
+这样系统将调用默认的清理函数。
+
+回调函数其定义例如以下：
+
+void fun(void *arg)
+
+{
+
+// arg 为 key 值,在此处清空数据
+
+}
+
+
+返回值：
+
+成功：0
+
+失败：非 0
+
+
+不论哪个线程调用 pthread_key_create()，所创建的 key 都是全部线程可訪问，但各个线程可依据自己的须要往 key 中填入不同的值，
+相当于提供了一个同名不同值的变量。
+
+
+
+//键的销毁函数 
+
+int pthread_key_delete(pthread_key_t key);       //  键的销毁 并不销毁与他相关联的私有数据   数据应该提前销毁！！
+功能：
+
+注销线程私有数据。
+
+这个函数并不会检查当前是否有线程正使用线程私有数据( key )，也不会调用清理函数 destructor() ，
+而仅仅是将线程私有数据( key )释放以供下一次调用 pthread_key_create() 使用。
+參数：
+
+key：待注销的私有数据。
+
+返回值：
+
+
+成功：0
+
+失败：非 0
 
 
 
@@ -655,9 +783,47 @@ PTHREAD_MUTEX_DEFAULT     |		 未定义           |        未定义          | 
 
 
 
+//键和私有数据的关联 
+
+
+int pthread_setspecific(pthread_key_t key, const void *pointer);
+
+功能：
+
+设置线程私有数据( key ) 和 value 关联，注意，是 value 的值（不是所指的内容）和 key 相关联。
+
+參数：
+
+key：线程私有数据。
+
+value：和 key 相关联的指针。
+
+返回值：
+
+成功：0
+
+失败：非 0
 
 
 
+
+//获取私有数据的地址，如果没有数据和KEY关联则返回0
+
+void * pthread_getspecific(pthread_key_t key);
+
+功能：
+
+读取线程私有数据( key )所关联的值。
+
+參数：
+
+key：线程私有数据。
+
+返回值：
+
+成功：线程私有数据( key )所关联的值的地址。
+
+失败：NULL
 
 
 

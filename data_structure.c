@@ -528,10 +528,33 @@ Status Stack_Pop(sqStack* s , ElemType *e){       //出栈并返回 出栈的数
 
 
 
+//栈的清空 
+
+ Status Stack_Clear(sqStack* s){
+ 	s->top = s->top;
+	return OK;                                       //数据不用覆盖
+ }
+
+//栈的销毁  
+ 
+ Status Stack_Destroy(sqStack* s){
+ 	int i;
+	int length_stack;
+	length_stack = s->stackSize;
+	for(i = 0;i<length_stack;i++){
+		free(s->base);
+		(s->base)++;
+	}
+	s->base = s->top = NULL;
+	s->stackSize = 0;
+	return OK;
+ }
 
 
-
-
+// 返回栈的当前容量  
+Status Stack_Destroy(sqStack* s){
+	return (s->top - s->base);                  //两个指针相减是  两个地址之间 相差的指针类型的个数
+}
 
 
 
