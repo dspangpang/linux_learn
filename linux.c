@@ -829,7 +829,30 @@ key：线程私有数据。
 
 
 
+////*****************在线程中安全使用fork
+  在创造进程时只会，复制父线程的内容，有可能无法加锁或解锁从父线程拷贝过来的 互斥量等   所以要使用 pthread_atfork函数
+    
+	  int pthread_atfork(void (*prepare)(void),void (*parent)(void),  void (*child)(void));
+//里面是三个回调函数
+	
+	第一个回调函数，会在使用fork之前调用
+	第二个回调函数，父进程返回前调用
+	第三个回调函数，子进程进程返回前调用
 
+	针对互斥量的情况
+
+void prepare(void){
+	 pthread_mutex_lock(&mutex);    // fork 调用之前先上所 上锁 若其他线程中已经上过锁，则在解锁前一直阻塞
+}
+
+
+void parent(void){
+	 pthread_mutex_unlock(&mutex);   //把prepare 上过的锁解开  这样新的进程中就不再有上锁的
+}
+
+void child (void){
+	pthread_mutex_unlock(&mutex);   //把prepare 上过的锁解开  这样新的进程中就不再有上锁的
+}
 
 
 
