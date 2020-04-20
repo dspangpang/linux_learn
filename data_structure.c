@@ -558,6 +558,60 @@ Status Stack_Destroy(sqStack* s){
 
 
 
+/******************************链式栈************************************************************************************************/
+
+typedef struct StackNode{
+	Elemtype data;
+	struct StackNode *next;
+
+}StackNode,*LinkStackPtr;
+
+typedef struct LinkStack{
+	LinkStackPtr top;
+	int count;                 
+}
+
+
+struct LinkStack stack;
+stack.count =  0;       
+/***********入栈************/
+
+Status Stack_Push(struct LinkStack*stack , ElemType e){
+	struct LinkStack *s;
+	LinkStackPtr p;
+	s = stack;
+	
+	p = (LinkStackPtr)malloc(sizeof(StackNode));
+	p->data = e;
+	
+	p->next = s->top;
+	s->top = p;
+
+	s->count ++;
+
+	return OK;
+}
+
+/***********出栈**************/
+Status Stack_Pop(struct LinkStack *stack , ElemType *e){
+	
+	struct LinkStack *s;
+	LinkStackPtr p;
+	if(stack->top == NULL){
+		return ERROR;
+	}
+	s = stack;
+	
+	*e = s->top->data;
+	p = s->top;
+	s->top = s->top->next;
+	free(p);
+	s->count --;
+	return OK;
+
+}
+
+
 
 
 
