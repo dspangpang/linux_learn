@@ -610,8 +610,81 @@ Status Stack_Pop(struct LinkStack *stack , ElemType *e){
 	return OK;
 
 }
+/********************************************队列***************************************************/
 
+    先进先出！！
+	
+	一般用链表来实现
 
+typedef struct QNode{            //存数据的节点
+	ElemType data;
+	struct QNode * next;
+}QNode,*QunenePrt;
+
+typedef struct{                     //队列头尾指针 
+    QunenePrt front;                //指向队头
+	QunenePrt rear;                  //指向队尾
+}LinkQuene;
+
+//初始化一个 队列***************************************************/
+
+Status Init_QueneList(LinkQuene * s ){
+	s->front = s->rear = (QunenePrt)malloc(sizeof (QNode));//头节点,队空时 都指向头节点    ，对头指向头节点
+	if(!s->front){
+		exit(0);
+	}
+	s->front->next = NULL;
+}
+
+//入队*************************************************************************/*******************/
+
+Status Insert_QueneList(LinkQuene * s ,ElemType e){
+	QunenePrt p;
+	p = (QunenePrt)malloc(sizeof(QNode));
+	if(p == NULL)
+		exit(0);
+	p->data = e;
+	p->next = NULL;
+	s->rear->next = p;
+	s->rear = p;
+	return OK;
+}
+
+//出队*********************************************************************************************/
+
+Status Dele_QueneList(LinkQuene * s ,ElemType *e){
+	QunenePrt p;
+	if(s->front == s->rear){
+		return ERROR;
+	}
+	p = s->front;
+	*e = p->data;
+	
+	if(s->rear == p){
+		s->rear = s->front;
+		return OK;
+	}
+	s->front = p->next;
+	free(p);
+	return OK;
+	
+}
+
+//销毁一个队列 *************************************************************************************
+
+Status Dele_QueneList(LinkQuene * s){
+	QunenePrt p;
+	while(s->front){
+		p = s->front-next;
+		free(s->front-next);
+		s->front = p;
+	}
+	return OK;
+}
+
+//如何避免假溢出
+      入队时，让队尾的下标+1 对队列大小取模，求余数，使该下标称为队尾，判断是否和队头相同，如不相同，即队未满
+	  出队同理
 
 
 
