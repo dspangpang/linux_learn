@@ -886,6 +886,31 @@ src为指向字符型的地址，即ASCII的地址的首地址（ddd.ddd.ddd.ddd
 af = AF_INET6
 src为指向IPV6的地址，函数将该地址转换为in6_addr的结构体，并复制在*dst中*/
 
+//成功返回 1 失败返回其他
+
+const char *inet_ntop(int af, const void *src, char *dst, socklen_t size); //最后一个是点分十进制的缓存区大小；
+
+//同上   将网络中的地址转换为 点分十进制
+//最后一个参数有宏定义
+#define INET_ADDRSTRLEN 16 //for IPv4
+#define INET6_ADDRSTRLEN 46 //for IPv6   //冒分16进制
+
+//成功 返回字符串首地址        失败返回NULL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
