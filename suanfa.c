@@ -103,12 +103,35 @@ char * longestPalindrome(char * s){
 	最后记得把栈清空
 
 
+/***********************使用递归的思想字符串逆序****************************************************/
+
+void print{                  
+	char a;
+	scanf("%c",&a);
+	if(a != '#')
+		print();    //此时开始递归，递归的执行顺序 就是从返回的函数一点一点向前推进，正好和字符串缓存里的顺序相反可以反序输出
+	if(a != '#')
+		printf("%c",a);
+}
 
 
+/*递归思想的有序数列折半查找*/
 
-
-
-
+int binary_search(int arr[], int left, int right,int ele){
+    int mid = (left + right) / 2;  //边界条件是找到当前值，或者查找范围为空。否则每一次查找都将范围缩小一半。
+　　 if(left>right){
+　　　　　return -1;　　
+     }
+　　else{
+		if (arr[mid] > ele)
+			right = mid - 1;
+		else if (arr[mid] < ele)
+			left = mid + 1;
+			else
+				return mid;
+    return binary_search(arr, left, right, ele);
+	}
+}
 
 
 
