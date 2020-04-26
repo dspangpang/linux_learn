@@ -162,6 +162,256 @@ void signal_handler_fun(int signum) {
 
 
 
+//信号集知识点 
+
+1.信号集
+  每个进程都有一个信号屏蔽字，它规定了当前要阻塞递送到该进程的信号集。对于每种可能的信号，该屏蔽字中都有一bit位与之对应。信号数可能会超过一个整型数所包含的二进制位数，因此POSIX.1定义了一个新数据类型sigset_t，它包括一个信号集
+  int sigempytset(sigset_t *set)  初始化set指向的信号集，清除其中的所有信号
+  int sigfillset(sigset_t *set)   初始化set指向的信号集，其中包含所有信号
+  int sigaddset(sigset_t *set,int signo);//向set中添加一个signo信号
+  int sigdelset(sigset_t *set,int signo);
+  以上均成功返回0 出错返回-1
+ 
+  测试某个信号是否被设置在信号集中
+  int sigismember(sigset_t *set,int signo) 为真返回1 为假返回0   出错返回-1
+
+2.sigprocmask ()   函数检测或更改进程的屏蔽字
+  int sigprocmask(int flag,const sigset_t *set,sigset_t *oldset);
+  若set非空指针，则按照flag方式进行设置新的信号屏蔽字
+SIG_BLOCK : 取当前进程的屏蔽字与set的并集   <不影响其它基础上 设置屏蔽>
+SIG_UNBLOCK：取当前进程的屏蔽字与set的补集 的交集  <不影响其它基础上  解除屏蔽>
+SIG_SETMASK:直接设置
+
+3.int sigsuspend(sigset_t *mask)
+  把进程信号屏蔽字设成为mask并原子的阻塞等侍一个某信号从捕捉函数返回
+
+4.int sigaction(int how,const sigset_t *act,sigset_t *oldact );
+   改变一个信号的行为
+
+
+
+/***********************************************信号灯***********************************************************************/
+/////POSIX 信号量
+
+POSIX信号量接口，意在解决XSI信号量接口的几个不足之处：
+
+POSIX信号量接口相比于XSI信号量接口，允许更高性能的实现。
+POSIX信号量接口简单易用：没有信号量集，其中一些接口模仿了我们熟悉的文件系统操作。
+POSIX信号量删除时的处理更加合理。XSI信号量被删除后，使用该信号量标识符的操作将会出错返回，并将errno设置为EIDRM。而对于POSIX信号量，操作可以继续正常执行，直到对该信号量的最后一个引用被释放。
+POSIX信号量有两种形式可供选用：有名和无名。它们的区别在于，如何被创建和销毁，其他方面则完全相同。无名信号量只存在于内存中，并且规定能够访问该内存的进程才能够使用该内存中的信号量。这就意味着，无名信号量只能被这样两种线程使用：（1）来自同一进程的各个线程（2）来自不同进程的各个线程，但是这些进程映射了相同的内存范围到自己的地址空间。相反，有名信号量则是通过名字访问，因此，来自于任何进程的线程，只要知道该有名信号量的名字都可以访问。
+
+//调用sem_open函数可以创建一个新的有名信号量，或打开一个现存的有名信号量。
+
+#include <semaphore.h>
+sem_t *sem_open(const char *name, int oflag, ... /* mode_t mode, unsigned int value */ );
+
+返回值：若成功则返回指向信号量的指针，若出错则返回SEM_FAILED
+如果使用一个现存的有名信号量，我们只需指定两个参数：信号量名和oflag（oflag取0）。
+把oflag设置为O_CREAT标志时，如果指定的信号量不存在则新建一个有名信号量；如果指定的信号量已经存在，那么打开使用，无其他额外操作发生。
+如果我们指定O_CREAT标志，那么就需要提供另外两个参数：mode和value
+mode用来指定谁可以访问该信号量。它可以取打开文件时所用的权限位的取值（参考http://www.cnblogs.com/nufangrensheng/p/3502097.html中表4-5）。最终赋予信号量的访问权限，是被调用者文件创建屏蔽字所修改过的（http://www.cnblogs.com/nufangrensheng/p/3502328.html）。然而，注意通常只有读写权限对我们有用，但是接口不允许在我们打开一个现存的信号量时指定打开模式（mode）。实现通常以读写打开信号量。
+
+value参数用来指定信号量的初始值。它可取值为：0-SEM_VALUE_MAX。
+
+如果我们想要确保我们在创建一个新的信号量，可以把oflag参数设置为：O_CREAT|O_EXCL。
+如果信号量已经存在的话，这会导致sem_open调用失败。
+
+为了提高移植性，我们在选择信号量名字的时候，必须遵循一定的约定：
+
+名字的首字符必须是斜杠（/）。
+除首字符外，名字中不能再包含其他斜杠（/）。
+名字的最长长度由实现定义，不应超过_POSIX_NAME_MAX个字符。
+sem_open函数返回一个信号量指针，该指针可供其他对该信号量进行操作的函数使用。
+
+//调用sem_close函数释放与信号量相关的资源。
+#include <semaphore.h>
+int sem_close(sem_t *sem);
+
+返回值：若成功则返回0，出错返回-1
+如果进程还没有调用sem_close就已经退出，那么内核会自动关闭该进程打开的所有信号量。
+注意，这并不会影响信号量值的状态——例如，如果我们增加了信号量的值，我们退出后这个值不会改变。
+同样，如果我们调用了sem_close，信号量值也不会受到影响。POSIX信号量机制中并没有如同XSI信号量中的SEM_UNDO标志。
+
+//调用sem_unlink函数来销毁一个有名信号量。
+
+#include <semaphore.h>
+int sem_unlink(const char *name);
+
+返回值：若成功则返回0，出错则返回-1
+sem_unlink函数移除信号量的名字。如果当前没有打开的对该信号量的引用，那么就销毁它。否则，销毁被推迟到最后一个打开的引用被关闭。
+
+与XSI信号量不同，我们只能对POSIX信号量的值进行加1或减1。
+对信号量值减1，就类似于对一个二值信号量加锁或请求一个与计数信号量相关的资源。
+
+注意，POSIX信号量并没有区分信号量类型。
+使用二值信号量还是计数信号量，取决于我们如果对信号进行初始化和使用。
+如果信号量值只能取0和1，那么它就是一个二值信号量。当一个二值信号量值为1，我们则说它未加锁；若它的值为0，则说它已加锁。
+
+调用sem_wait或sem_trywait函数，请求一个信号量（对信号量值执行减1操作）。
+
+#include <semaphore.h>
+int sem_trywait(sem_t *sem);
+int sem_wait(sem_t *sem);
+两个函数返回值：若成功则返回0，出错则返回-1
+
+如果信号量计数为0，这时如果调用sem_wait函数，将会阻塞。直到成功对信号量计数减1或被一个信号中断，sem_wait函数才会返回。
+我们可以使用sem_trywait函数以避免阻塞。
+当我们调用sem_trywait函数时，如果信号量计数为0，sem_trywait会返回-1 ，并将errno设置为EAGAIN。
+
+//第三种方法是可以阻塞一段有限的时间，这时我们使用sem_timedwait函数。
+
+#include <semaphore.h>
+#include <time.h>
+
+int sem_timedwait(sem_t *restrict sem, const struct timespec *restrict tsptr);
+
+返回值：若成功则返回0，出错则返回-1
+tsptr参数指定了希望等待的绝对时间。
+如果信号量可以被立即减1，那么超时也无所谓，即使你指定了一个已经过去的时间，试图对信号量减1的操作也会成功。
+如果直到超时，还不能对信号量计数减1，那么sem_timedwait函数将会返回-1 ，并将errno设置为ETIMEDOUT。
+
+//调用sem_post函数对信号量值加1。这类似于对一个二值信号量解锁或释放一个与计数信号量有关的资源。
+
+#include <semaphore.h>
+int sem_post(sem_t *sem);
+返回值：若成功则返回0，出错则返回-1
+当我们调用sem_post的时，如果此时有因为调用sem_wait或sem_timedwait而阻塞的进程，那么该进程将被唤醒，
+并且刚刚被sem_post加1的信号量计数紧接着又被sem_wait或sem_timedwait减1。
+
+如果我们想要在一个单一进程内使用POSIX信号量，那么使用无名信号量会更加简单。
+无名信号量只是创建和销毁有所改变，其他完全和有名信号量一样。
+
+//我们调用sem_init函数创建一个无名信号量。
+
+#include <semaphore.h>
+int sem_init(sem_t *sem, int pshared, unsigned int value);
+返回值：若成功则返回0，出错返回-1
+pshared参数指示我们是否要在多进程之间使用该无名信号量。如果要在多个进程之间使用，则将pshared设置为非0值。value参数指定信号量的初始值。
+
+另外，我们需要声明一个sem_t类型的变量，并把它的地址传给sem_init，以便对该变量进行初始化。如果我们要在两个进程之间使用该无名信号量，我们需要确保sem参数指向这两个进程共享的内存范围内。
+
+//我们可以调用sem_destroy函数来销毁用完的无名信号量。
+
+#include <semaphore.h>
+int sem_destroy(sem_t *sem);
+返回值：若成功则返回0，出错则返回-1
+调用sem_destroy后我们将不能再以sem为参数调用任何信号量函数，除非我们再次使用sem_init对sem进行初始化。
+
+//我们可以调用sem_getvalue函数来获取信号量值。
+
+#include <semaphore.h>
+int sem_getvalue(sem_t *sem, int *restrict valp);
+返回值：若成功则返回0，出错则返回-1
+如果sem_getvalue执行成功，信号量的值将存入valp指向的整型变量中。但是，需要小心，我们刚读出来的信号量值可能会改变（因为我们随时可能会使用该信号量值）。如果不采取额外的同步机制的话，sem_getvalue函数仅仅用来调试。
+
+
+
+//////////////////////////////////////////////////
+1）int semget(key_t key, int nsems, int semflg) 
+
+参数key是一个键值，由ftok获得，唯一标识一个信号灯集，用法与msgget()中的key相同；
+参数nsems指定打开或者新创建的信号灯集中将包含信号灯的数目；
+semflg参数是一些标志位。
+参数key和semflg的取值，以及何时打开已有信号灯集或者创建一个新的信号灯集与msgget()中的对应部分相同，不再祥述。 
+
+该调用返回与健值key相对应的信号灯集描述字。 
+调用返回：成功返回信号灯集描述字，否则返回-1。 
+
+注：如果key所代表的信号灯已经存在，且semget指定了IPC_CREAT|IPC_EXCL标志，那么即使参数nsems与原来信号灯的数目不等，返回的也是EEXIST错误；
+如果semget只指定了IPC_CREAT标志，那么参数nsems必须与原来的值一致，在后面程序实例中还要进一步说明。
+
+
+
+
+2）int semop(int semid, struct sembuf *sops, unsigned nsops); 
+semid是信号灯集ID，sops指向数组的每一个sembuf结构都刻画一个在特定信号灯上的操作。nsops为要操作的信号灯的个数。 
+sembuf结构如下：
+
+struct sembuf {
+	unsigned short  	sem_num;		/* 对第几个信号量 */
+	short			    sem_op;		/* semaphore operation */
+	short			    sem_flg;		/* operation flags */  
+};
+sem_num对应信号集中的信号灯，0对应第一个信号灯。
+
+
+sem_flg可取IPC_NOWAIT以及SEM_UNDO两个标志 或者 0 阻塞方式。
+如果设置了SEM_UNDO标志，那么在进程结束时，相应的操作将被取消，这是比较重要的一个标志位。
+如果设置了该标志位，那么在进程没有释放共享资源就退出时，内核将代为释放。
+如果为一个信号灯设置了该标志，内核都要分配一个sem_undo结构来记录它，为的是确保以后资源能够安全释放。
+事实上，如果进程退出了，那么它所占用就释放了，但信号灯值却没有改变，此时，信号灯值反映的已经不是资源占有的实际情况，
+在这种情况下，问题的解决就靠内核来完成。这有点像僵尸进程，进程虽然退出了，资源也都释放了，但内核进程表中仍然有它的记录，
+此时就需要父进程调用waitpid来解决问题了。 
+
+
+sem_op的值大于0，等于0以及小于0确定了对sem_num指定的信号灯进行的三种操作。
+
+sem_op = 0;   等待 直到信号量变成 0
+sem_op = 1;   释放资源 	 V操作   加一操作
+sem_op = -1;  分配资源   P操作   减一操作
+
+这里需要强调的是semop同时操作多个信号灯，在实际应用中，对应多种资源的申请或释放。semop保证操作的原子性，这一点尤为重要。
+尤其对于多种资源的申请来说，要么一次性获得所有资源，要么放弃申请，要么在不占有任何资源情况下继续等待，
+这样，一方面避免了资源的浪费；另一方面，避免了进程之间由于申请共享资源造成死锁。 
+
+也许从实际含义上更好理解这些操作：信号灯的当前值记录相应资源目前可用数目；
+
+sem_op>0对应相应进程要释放sem_op数目的共享资源；
+sem_op=0可以用于对共享资源是否已用完的测试；
+sem_op<0相当于进程要申请-sem_op个共享资源。再联想操作的原子性，更不难理解该系统调用何时正常返回，何时睡眠等待。 
+
+调用返回：成功返回0，否则返回-1。
+
+
+
+3) int semctl(int semid，int semnum，int cmd，union semun arg) 
+该系统调用实现对信号灯的各种控制操作，
+参数semid指定信号灯集，
+参数cmd指定具体的操作类型；
+参数semnum指定对哪个信号灯操作，只对几个特殊的cmd操作有意义；arg用于设置或返回信号灯信息。 
+该系统调用详细信息请参见其手册页，这里只给出参数cmd所能指定的操作。
+	
+ 
+/*联合体变量*/
+union semun
+{
+ int val; //信号量初始值                   
+ struct semid_ds *buf;        
+ unsigned short int *array;  
+ struct seminfo *__buf;      
+}; 
+
+
+
+
+IPC_STAT	 获取信号灯信息，信息由arg.buf返回；
+IPC_SET	     设置信号灯信息，待设置信息保存在arg.buf中（在manpage中给出了可以设置哪些信息）；
+GETALL	     返回所有信号灯的值，结果保存在arg.array中，参数sennum被忽略；
+GETNCNT	     返回等待semnum所代表信号灯的值增加的进程数，相当于目前有多少进程在等待semnum代表的信号灯所代表的共享资源；
+GETPID	     返回最后一个对semnum所代表信号灯执行semop操作的进程ID；
+GETVAL	     返回semnum所代表信号灯的值；
+GETZCNT	     返回等待semnum所代表信号灯的值变成0的进程数；
+SETALL	     通过arg.array更新所有信号灯的值；同时，更新与本信号集相关的semid_ds结构的sem_ctime成员；
+SETVAL	     设置semnum所代表信号灯的值为arg.val；
+
+调用返回：调用失败返回-1，成功返回与cmd相关：
+
+Cmd	      return value
+GETNCNT	    Semncnt
+GETPID	    Sempid
+GETVAL	    Semval
+GETZCNT	    Semzcnt
+回页首
+
+//信号灯的限制
+1、 一次系统调用semop可同时操作的信号灯数目SEMOPM，semop中的参数nsops如果超过了这个数目，将返回E2BIG错误。SEMOPM的大小特定与系统，redhat 8.0为32。
+
+2、 信号灯的最大数目：SEMVMX，当设置信号灯值超过这个限制时，会返回ERANGE错误。在redhat 8.0中该值为32767。
+
+3、 系统范围内信号灯集的最大数目SEMMNI以及系统范围内信号灯的最大数目SEMMNS。超过这两个限制将返回ENOSPC错误。redhat 8.0中该值为32000。
+
+4、 每个信号灯集中的最大信号灯数目SEMMSL，redhat 8.0中为250。 SEMOPM以及SEMVMX是使用semop调用时应该注意的；SEMMNI以及SEMMNS是调用semget时应该注意的。SEMVMX同时也是semctl调用应该注意的。
+
 
 
 
@@ -898,10 +1148,19 @@ const char *inet_ntop(int af, const void *src, char *dst, socklen_t size); //最
 //成功 返回字符串首地址        失败返回NULL
 
 
+////////////创建套接字*******socket
 
+int socket (int family , int type , int protocol)
 
+/*功能*/
 
+      创建一个用于网络通信的套接字（描述符）
+/* 参数*/
 
+	   family  :协议族(AF_INET,AF_INET6 )等
+	   type :  套接字类(SOCK_STREAM,SOCK_DGRAM,SOCK_TAW等)
+	   protocol : 协议类别 (0,IPPROTO_TCP,IPPROTO_UDP 等 )
+	   
 
 
 
