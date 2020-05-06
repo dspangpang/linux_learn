@@ -1119,9 +1119,12 @@ void child (void){
 uint32_t htonl( uint32_t hostint 32);        //主机——————————>网络 长整型字节序转换
 
 //字节序转换     网络——————————>主机
-uint32_t ntohl( uint32_t hostint 32);        // 网络——————————>主机 长整型字节序转换
+uint32_t ntohl( uint32_t hostint 32);        // 网络——————————>主机 长整型字节序转换    //ntohs  十六位短整型
 //函数默认    网路的数据是大端，这个函数会判断主机的存储方式，然后判断是否需要转码
 //同样的也有 16 位
+
+
+
 
 
 int inet_pton(int af, const char *src, void *dst);
@@ -1159,13 +1162,49 @@ int socket (int family , int type , int protocol)
 
 	   family  :协议族(AF_INET,AF_INET6 )等
 	   type :  套接字类(SOCK_STREAM,SOCK_DGRAM,SOCK_TAW等)
-	   protocol : 协议类别 (0,IPPROTO_TCP,IPPROTO_UDP 等 )
+	   protocol : 协议类别 (0,IPPROTO_TCP,IPPROTO_UDP 等 ) //0 自动补齐
 	   
+int sendto(int s, const void * msg, int len, unsigned int flags, const struct sockaddr * to, int tolen);
 
 
+函数说明：sendto() 用来将数据由指定的socket 传给对方主机.
+参数s 为已建好连线的socket, 如果利用UDP协议则不需经过连线操作.
+参数msg 指向欲连线的数据内容, 
+参数flags 一般设0, 详细描述请参考send(). 
+参数to 用来指定欲传送的网络地址, 结构sockaddr 请参考bind(). 
+参数tolen 为sockaddr 的结果长度.
+
+返回值：成功则返回实际传送出去的字符数, 失败返回－1, 错误原因存于errno 中.
+
+错误代码：
+1、EBADF 参数s 非法的socket 处理代码.
+2、EFAULT 参数中有一指针指向无法存取的内存空间.
+3、WNOTSOCK canshu s 为一文件描述词, 非socket.
+4、EINTR 被信号所中断.
+5、EAGAIN 此动作会令进程阻断, 但参数s 的soket 为补课阻断的.
+6、ENOBUFS 系统的缓冲内存不足.
+7、EINVAL 传给系统调用的参数不正确.
+
+//地址结构 
+struct sockaddr{
+	sa_family_t     sin_family;  //2字节
+	char            sa_data[14]  //14字节
+};     //和socketaddr_in 大小相同 所以可传入
+
+struct in_addr{
+	in_addr_t  s_addr;
+}
 
 
+struct socketaddr_in{
+	sa_family_t     sin_family;  //2字节
+	in_port_t       sin_port;    //2字节    //使用的时候应变成网络端数据
+	struct in_addr  sin_addr;    //4字节
+	char            sin_zero[8]  //8字节
+};                                                       //使用时 类型强转一下！！
 
+
+bzero(地址，大小); //清空函数
 
 
 
