@@ -1164,6 +1164,22 @@ int socket (int family , int type , int protocol)
 	   type :  套接字类(SOCK_STREAM,SOCK_DGRAM,SOCK_TAW等)
 	   protocol : 协议类别 (0,IPPROTO_TCP,IPPROTO_UDP 等 ) //0 自动补齐
 	   
+1.流式套接字(SOCK_STREAM)
+    流式的套接字可以提供可靠的、面向连接的通讯流。如果你通过流式套接字发送了顺序的数据:“1”“2”，
+	那么数据到达远程时候的顺序也是“1”“2”。	   
+ 2.数据报套接字(SOCK_DGRAM)
+    数据报套接字定义了一种无连接的服务,数据通过相互独立的报文进行传输,是无序的,并且不保证可靠,无差错。
+	原始套接字允许对低层协议如IP或ICMP直接访问,主要用于新的网络协议实现的测试等。	   
+3.原始套接字
+    原始套接字主要用于一些协议的开发,可以进行比较底层的操作。
+	它功能强大,但是没有上面介绍的两种套接字使用方便,一般的程序也涉及不到原始套接字。
+
+	   
+	   
+	   
+	   
+	   
+	   
 int sendto(int s, const void * msg, int len, unsigned int flags, const struct sockaddr * to, int tolen);
 
 
