@@ -1119,7 +1119,7 @@ void child (void){
 uint32_t htonl( uint32_t hostint 32);        //主机——————————>网络 长整型字节序转换
 
 //字节序转换     网络——————————>主机
-uint32_t ntohl( uint32_t hostint 32);        // 网络——————————>主机 长整型字节序转换    //ntohs  十六位短整型
+uint32_t ntohl( uint32_t hostint 32);        // 网络——————————>主机 长整型字节序转换        //ntohs  十六位短整型
 //函数默认    网路的数据是大端，这个函数会判断主机的存储方式，然后判断是否需要转码
 //同样的也有 16 位
 
@@ -1196,7 +1196,7 @@ struct in_addr{
 }
 
 
-struct socketaddr_in{
+struct sockaddr_in{
 	sa_family_t     sin_family;  //2字节
 	in_port_t       sin_port;    //2字节    //使用的时候应变成网络端数据
 	struct in_addr  sin_addr;    //4字节
@@ -1242,6 +1242,25 @@ ssize_t recvfrom(int sockfd,  //套接字
 如果addr非空，他将包含数据发送者的套接字地址，
 当调用recvfrom时，需要设置addrlen参数指向一个包含addr所指套接字缓冲区字节大小的整数。返回时，该整数设为该地址的实际字节大小。
 因为可以获得发送者的地址，recvfrom通常用于无连接套接字。否则recvfrom等同于recv。
+
+
+
+
+
+
+
+/****************************************TFTP协议*****************************************************************/
+
+
+
+
+
+
+
+
+
+
+
 
 
 
