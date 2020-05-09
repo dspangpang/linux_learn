@@ -1266,19 +1266,31 @@ ssize_t recvfrom(int sockfd,  //套接字
 
 
 /****************************************TFTP协议*****************************************************************/
+/*协议详解*/    
+               操作码
+读写请求 ：   1/2(RD/RW)    filename     0       模式       0     选项1     0      值1         0  ……
+                2bytes      n bytes     1B      n bytes     1B    n bytes   1B    n bytes      1B ……
+                     
 
+数据包   ：    3(DATA)      块编号          数据
+               2 bytes      2 bytes         512 bytes 
 
+ACK      :      4(ACK)      块编号             //数据确认
+               2 bytes      2 bytes 
 
+ERROR    ：     5(ERR)      差错码        差错信息         0
+                2 bytes      2 bytes     n bytes           1B
+				
+OACK     :       6(OACK)      选项1     0      值1         0   ……
+                2bytes      n bytes     1B      n bytes     1B  …… 
 
-
-
-
-
-
-
-
-
-
-
-
+/*错误代码* ERROR */
+   0         Not defined, see error message (if any).   
+   1         File not found.
+   2         Access violation.
+   3         Disk full or allocation exceeded.
+   4         Illegal TFTP operation.
+   5         Unknown transfer ID.
+   6         File already exists.
+   7         No such user.
 
