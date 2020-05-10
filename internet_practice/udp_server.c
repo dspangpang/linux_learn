@@ -10,13 +10,13 @@ History:
 #include <stdio.h>
 #include <sys/socket.h>
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 #include <arpa/inet.h>
 int main(){
 	/*创建一个套接字的类型*/
 	int fd;     
-	char send_buf[128] = "hello";
-	char recv_buf[128] = {0};
+	char send_buf[127] = "hello";
+	char recv_buf[100] ;
 	/*接收 recvfrom 函数的返回值*/
 	int len ;
 	

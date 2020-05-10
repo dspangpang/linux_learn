@@ -10,7 +10,7 @@ History:
 #include <stdio.h>
 #include <sys/socket.h>
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 #include <arpa/inet.h>
 int main(){
 	/*创建一个套接字的类型*/
@@ -46,7 +46,7 @@ int main(){
 	
 	
 	/*向服务端发送消息*/
-	sendto(fd,send_buf,sizeof(send_buf),0,(struct sockaddr *)&server_addr,sizeof(server_addr));
+	sendto(fd,send_buf,strlen(send_buf),0,(struct sockaddr *)&server_addr,sizeof(server_addr));
 	
 	
 	/*关闭创建的套接字*/
