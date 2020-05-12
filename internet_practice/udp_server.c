@@ -14,7 +14,8 @@ History:
 #include <arpa/inet.h>
 int main(){
 	/*创建一个套接字的类型*/
-	int fd;     
+	int fd;   
+	int fd1;
 	char send_buf[127] = "hello";
 	char recv_buf[100] ;
 	/*接收 recvfrom 函数的返回值*/
@@ -28,7 +29,7 @@ int main(){
 	struct sockaddr_in local_addr;
 	
 	fd = socket(AF_INET,SOCK_DGRAM,0);
-	
+	fd1 = socket(AF_INET,SOCK_DGRAM,0);
 	/*判断套接字是否创建成功*/
 	if(fd<0){
 		perror("socket");
@@ -37,8 +38,7 @@ int main(){
 	printf("%d\n",fd);
 	char * local_ip = "192.168.202.129";
 	char * server_ip = "192.168.202.129";
-	unsigned int local_port = 9997;
-	unsigned int client_port ;
+	unsigned int local_port = 66799;
 
 	
 	
@@ -63,11 +63,26 @@ int main(){
 	if(len>0){
 		printf("len= %d \n",len);
 		printf("%s \n",recv_buf);
+		printf("端口号为%d\n",ntohs(client_addr.sin_port));
+		sendto(fd1,send_buf,strlen(send_buf),0,(struct sockaddr *)&client_addr,sizeof(client_addr));
 	}
-
+	
+	len = recvfrom(fd1,recv_buf,sizeof(recv_buf),0,(struct sockaddr *)&client_addr,&addr_len);
+	if(len<0){
+		perror("recvfrom");
+		
+	}
+	
+	if(len>0){
+		printf("len= %d \n",len);
+		printf("%s \n",recv_buf);
+		printf("端口号为%d\n",ntohs(client_addr.sin_port));
+		sendto(fd1,send_buf,strlen(send_buf),0,(struct sockaddr *)&client_addr,sizeof(client_addr));
+	}
+	
 	
 	/*关闭创建的套接字*/
 	close(fd);
-	
+	close(fd1);
 	return 0;
 }
