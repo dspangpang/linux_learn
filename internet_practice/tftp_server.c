@@ -16,10 +16,13 @@ History:
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+
+
 union code{
 	short data ;
 	char  str[2];
 };
+
 
 int main(int argc ,char* argv[]){
 	
@@ -171,10 +174,75 @@ int main(int argc ,char* argv[]){
 		}
 	}
 	
+	if(recv_buf[1] == 2){
+		fp = open(recv_buf+2,O_WRONLY|O_CREAT,0777);
+		if(fp<0){
+			perror("open");
+			exit(-1);
+		}
+		/*发送空应答*/
+		bzero(send_buf,sizeof(send_buf));
+		send_buf[0] = 0;
+		send_buf[1] = 4;
+		send_buf[2] = code_num.str[0];
+		send_buf[3] = code_num.str[1];
+		
+		sendto_len = sendto(fd_tem,send_buf,4,0,(struct sockaddr *)&client_addr,sizeof(client_addr));
+		
+		if(sendto_len<0){
+			perror("sendto");
+			close(fd);
+			close(fp);
+			close(fd_tem);
+			exit(-1);
+		}
+		
+		/*从客户端接收数据*/
+		while(1){
+			bzero(recv_buf,sizeof(recv_buf));
+			
+			len = recvfrom(fd_tem,recv_buf,sizeof(recv_buf),0,(struct sockaddr *)&client_addr,&client_len);
+			
+			if(len<0){
+				perror("recvfrom");
+				close(fd);
+				close(fd_tem);
+				close(fp);
+				exit(-1);
+			}
+			printf("client端口号为%d\n",ntohs(client_addr.sin_port));
+			if(recv_buf[1] == 5){
+				printf("%s",recv_buf+4);
+				break;
+			}
+			if(516 == len && recv_buf[1] == 3){
+				write(fp,recv_buf+4,512);
+				sendto_len = sendto(fd_tem,recv_buf,4,0,(struct sockaddr *)&client_addr,sizeof(client_addr));
+				printf("sendto_len = %d\n",sendto_len);
+				if(sendto_len<0){
+				perror("sendto");
+				close(fd);
+				close(fp);
+				exit(-1);
+				}
+				printf("client的端口号为%d,数据包编号为 %d\n",ntohs(client_addr.sin_port),*((short*)(recv_buf+2)));
+			}
+			if(516 > len && recv_buf[1] == 3){
+				break;
+			}
+			
+		}
+		write(fp,recv_buf+4,len);
+		printf("client的端口号为%d,数据包编号为 %d\n",ntohs(client_addr.sin_port),*((short*)(recv_buf+2)));
+		sendto_len = sendto(fd_tem,recv_buf,4,0,(struct sockaddr *)&client_addr,sizeof(client_addr));
+	}
+
 	
 	
 	/*关闭创建的套接字*/
 	close(fd);
+	close(fd_tem);
 	close(fp);
+	
 	return 0;
 }
