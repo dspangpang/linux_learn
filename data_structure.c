@@ -690,3 +690,77 @@ Status Dele_QueneList(LinkQuene * s){
 
 
 
+
+
+
+
+
+
+
+/***********************************************树*************************************************************/
+
+
+
+1. 树的存储结构
+
+//树的双亲表示法结构定义
+   
+typedef struct PTNode{
+
+	ElemType data ;  //节点数据
+	int parent    ;  //双亲位置
+	//根据需要可以设计自己需要的数据
+}PTNode;
+
+
+typedef struct {
+
+	PTNode nodes[MAX_TREE_SIZE];
+	int r;    //根的位置
+	int n;    //节点数目
+}PTree;
+
+
+//孩子双亲表示法
+
+
+typedef struct CTNode{
+
+	int child;         //孩子节点的下标
+	struct CTNode *next ;         //指向下一个孩子节点的指针
+}*childPtr;
+
+//表头结构
+
+typedef struct {
+
+	ElemType data;        //存放在树中节点的数据
+	int parent;           //双亲位置
+	childPtr firstchild;  //指向第一个孩子的指针
+}CTbox;
+
+
+//树结构
+
+typedef struct {
+
+	CTbox nodes[MAX_TREE_SIZE];          //节点数组
+	int r;                               //根的位置
+	int n;				     //节点数量
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
